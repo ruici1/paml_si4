@@ -1,128 +1,201 @@
-import { StyleSheet, Image, Platform } from 'react-native';
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Alert, ImageBackground } from "react-native";
 
-export default function TabTwoScreen() {
+const App = () => {
+  const [dataKelas, setDataKelas] = useState([
+    { id: "1", nama: "Matematika", guru: "Bu Siti", jam: "08:00 - 09:30" },
+    { id: "2", nama: "Bahasa Inggris", guru: "Pak Budi", jam: "09:30 - 11:00" },
+    { id: "3", nama: "IPA", guru: "Bu Rina", jam: "11:00 - 12:30" },
+  ]);
+  const [nama, setNama] = useState("");
+  const [guru, setGuru] = useState("");
+  const [jam, setJam] = useState(""); // New state for Jam Pelajaran
+  const [editingIndex, setEditingIndex] = useState(null);
+
+  const handleSave = () => {
+    if (!nama || !guru || !jam) {
+      Alert.alert("Error", "Nama, Guru, dan Jam Pelajaran harus diisi.");
+      return;
+    }
+
+    if (editingIndex !== null) {
+      const updatedData = [...dataKelas];
+      updatedData[editingIndex] = { ...updatedData[editingIndex], nama, guru, jam };
+      setDataKelas(updatedData);
+      setEditingIndex(null);
+    } else {
+      setDataKelas([
+        ...dataKelas,
+        { id: (dataKelas.length + 1).toString(), nama, guru, jam },
+      ]);
+    }
+
+    setNama("");
+    setGuru("");
+    setJam("");
+  };
+
+  const handleDelete = (index) => {
+    const updatedData = dataKelas.filter((_, i) => i !== index);
+    setDataKelas(updatedData);
+  };
+
+  const handleEdit = (index) => {
+    setNama(dataKelas[index].nama);
+    setGuru(dataKelas[index].guru);
+    setJam(dataKelas[index].jam); // Set the selected jam
+    setEditingIndex(index);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
+    <ImageBackground source={{ uri: "https://example.com/background-image.jpg" }} style={styles.background}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Data Mata Pelajaran</Text>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Nama Mata Pelajaran"
+            value={nama}
+            onChangeText={setNama}
+            placeholderTextColor="#888"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Guru"
+            value={guru}
+            onChangeText={setGuru}
+            placeholderTextColor="#888"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Jam Pelajaran"
+            value={jam}
+            onChangeText={setJam}
+            placeholderTextColor="#888"
+          />
+          <TouchableOpacity style={styles.addButton} onPress={handleSave}>
+            <Text style={styles.addButtonText}>{editingIndex !== null ? "Simpan" : "Tambah"}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.tableHeader}>
+          <Text style={[styles.cell, styles.headerCell, { flex: 0.5 }]}>ID</Text>
+          <Text style={[styles.cell, styles.headerCell, { flex: 2 }]}>Mata Pelajaran</Text>
+          <Text style={[styles.cell, styles.headerCell, { flex: 2 }]}>Guru</Text>
+          <Text style={[styles.cell, styles.headerCell, { flex: 2 }]}>Jam Pelajaran</Text> {/* New Column */}
+          <Text style={[styles.cell, styles.headerCell, { flex: 2 }]}>Aksi</Text>
+        </View>
+
+        <FlatList
+          data={dataKelas}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => (
+            <View style={styles.row}>
+              <Text style={[styles.cell, { flex: 0.5 }]}>{item.id}</Text>
+              <Text style={[styles.cell, { flex: 2 }]}>{item.nama}</Text>
+              <Text style={[styles.cell, { flex: 2 }]}>{item.guru}</Text>
+              <Text style={[styles.cell, { flex: 2 }]}>{item.jam}</Text> {/* Display Jam Pelajaran */}
+              <View style={{ flex: 2, flexDirection: "row", justifyContent: "center" }}>
+                <TouchableOpacity style={styles.editButton} onPress={() => handleEdit(index)}>
+                  <Text style={styles.buttonText}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(index)}>
+                  <Text style={styles.buttonText}>Hapus</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         />
-      }
-    >
-      {/* Title Section */}
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Instagram</ThemedText>
-      </ThemedView>
-      <ThemedText>
-        This app includes example code to help you get started.
-      </ThemedText>
-
-      {/* Collapsible Section - File-based Routing */}
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/instagram.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText> 
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-
-      {/* Collapsible Section - Android, iOS, and Web Support */}
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-
-      {/* Collapsible Section - Images */}
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> 
-          and <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities.
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={styles.image} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-
-      {/* Collapsible Section - Custom Fonts */}
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load 
-          <ThemedText style={styles.customFont}>custom fonts such as this one.</ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-
-      {/* Collapsible Section - Light and Dark Mode Components */}
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-
-      {/* Collapsible Section - Animations */}
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText> 
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+      </View>
+    </ImageBackground>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  background: {
+    flex: 1,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  image: {
-    alignSelf: 'center',
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+    color: '#fff',
   },
-  customFont: {
-    fontFamily: 'SpaceMono',
+  inputContainer: {
+    marginBottom: 20,
+  },
+  input: {
+    height: 40,
+    borderColor: '#aaa',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    backgroundColor: "#fff",
+  },
+  addButton: {
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  addButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  tableHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: '#000',
+    padding: 10,
+    marginBottom: 5,
+    borderRadius: 5,
+  },
+  headerCell: {
+    color: '#fff',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    borderRadius: 5,
+    marginBottom: 5,
+  },
+  cell: {
+    textAlign: "center",
+    color: '#000',
+  },
+  editButton: {
+    backgroundColor: '#FFD700',
+    padding: 5,
+    borderRadius: 5,
+    marginLeft: 5,
+  },
+  deleteButton: {
+    backgroundColor: '#FF6347',
+    padding: 5,
+    borderRadius: 5,
+    marginLeft: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
+
+export default App;
